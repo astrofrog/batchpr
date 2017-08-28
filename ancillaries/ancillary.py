@@ -1,5 +1,6 @@
 import os
 import abc
+import six
 import subprocess
 
 import requests
@@ -8,6 +9,7 @@ import requests
 GITHUB_RAW_FILENAME = "https://raw.githubusercontent.com/{repo}/master/{filename}"
 
 
+@six.add_metaclass(abc.ABCMeta)
 class Ancillary(object):
 
     def __init__(self, github, repo_name):
@@ -27,8 +29,6 @@ class Ancillary(object):
         if not self.process():
             print("Process did not complete successfully - will not open a pull request")
             return
-
-        # self.open_pull_request()
 
     def check_file_exists(self, filename):
         r = requests.get(GITHUB_RAW_FILENAME.format(repo=self.repo_name, filename=filename))
@@ -87,13 +87,17 @@ class Ancillary(object):
             raise Exception("Command '{0}' failed".format(command))
 
     @abc.abstractmethod
-    def precheck(self):
-        pass
-
-    @abc.abstractmethod
     def process(self):
         pass
 
     @abc.abstractproperty
     def branch_name(self):
+        pass
+
+    @abc.abstractproperty
+    def commit_message(self):
+        pass
+
+    @abc.abstractproperty
+    def description(self):
         pass
