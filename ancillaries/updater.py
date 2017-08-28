@@ -10,7 +10,7 @@ GITHUB_RAW_FILENAME = "https://raw.githubusercontent.com/{repo}/master/{filename
 
 
 @six.add_metaclass(abc.ABCMeta)
-class Ancillary(object):
+class Updater(object):
 
     def __init__(self, github, repo_name):
         self.github = github
