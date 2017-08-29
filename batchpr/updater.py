@@ -2,6 +2,8 @@ import os
 import abc
 import six
 import sys
+import shutil
+import tempfile
 import subprocess
 from textwrap import indent
 
@@ -33,6 +35,8 @@ class Updater(object):
         if isinstance(repositories, six.string_types):
             repositories = [repositories]
 
+        start_dir = os.path.abspath('.')
+
         for repository in repositories:
 
             print(colored('Processing repository: {0}'.format(repository), 'cyan'))
@@ -53,18 +57,43 @@ class Updater(object):
                 self.error("    An error occurred when trying to set up a fork")
                 continue
 
-            try:
-                self.clone_fork()
-            except BranchExistsException:
-                self.error("    Branch {0} already exists - skipping repository".format(self.branch_name))
-                continue
-            except Exception:
-                self.error("    An error occurred - skipping repository")
-                continue
+            # Go to temporary directory
+            directory = tempfile.mkdtemp()
 
-            if not self.process_repo():
-                self.warn("    Skipping repository")
-                return
+            try:
+
+                os.chdir(directory)
+
+                try:
+                    self.clone_fork()
+                except BranchExistsException:
+                    self.error("    Branch {0} already exists - skipping repository".format(self.branch_name))
+                    continue
+                except Exception:
+                    self.error("    An error occurred when cloning fork - skipping repository")
+                    continue
+
+                if not self.process_repo():
+                    self.warn("    Skipping repository")
+                    return
+
+                if '--dry' not in sys.argv:
+
+                    try:
+                        self.open_pull_request()
+                    except Exception:
+                        self.error("    An error occurred when opening pull request - skipping repository")
+                        continue
+
+            finally:
+
+                os.chdir(start_dir)
+
+    def add(self, filename):
+        self.run_command('git add {0}'.format(filename))
+
+    def copy(self, filename1, filename2):
+        shutil.copy(filename1, filename2)
 
     def warn(self, message):
         print(colored(message, 'magenta'))
