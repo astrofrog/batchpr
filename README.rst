@@ -58,7 +58,7 @@ The ``run`` method can take a single repository or a list of repositories.
 
 When in the ``Updater`` class, the following methods are available:
 
-* ``self.run_command(...)``: should be used for running shell commands (e.g.
+* ``self.run_command(command)``: should be used for running shell commands (e.g.
   ``git``)
 
 * ``self.warn(message)``: should be used for warning messages
