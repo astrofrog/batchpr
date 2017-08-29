@@ -7,7 +7,7 @@ to a selection of repositories and make specific changes to them.
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties::
 
-    from ancillaries import Updater
+    from batchpr import Updater
 
     class MyUpdater(Updater):
 
