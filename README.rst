@@ -40,16 +40,15 @@ the ``Updater`` class, and define the following methods and properties:
         def branch_name(self):
             # The name of the branch to use
 
-Once you have defined your updater class, you can log in to GitHub and
-run the updater as follows:
+Once you have defined your updater class, you can run it with:
 
 .. code:: python
 
-    from github import Github
-    github = Github(<username>, <password>)
-
-    helper = MyUpdater(github=github)
+    helper = MyUpdater(token=GITHUB_TOKEN)
     helper.run('username/repo')
+
+Where GITHUB_TOKEN is a personal access token for GitHub. If you want to
+customize the author of the commit, you can also set ``author="Name <email>"``.
 
 The ``run`` method can take a single repository or a list of repositories.
 

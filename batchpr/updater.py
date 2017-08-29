@@ -7,6 +7,7 @@ import tempfile
 import subprocess
 from textwrap import indent
 
+from github import Github
 from termcolor import colored
 import requests
 
@@ -21,9 +22,11 @@ class BranchExistsException(Exception):
 @six.add_metaclass(abc.ABCMeta)
 class Updater(object):
 
-    def __init__(self, github):
-        self.github = github
-        self.user = github.get_user()
+    def __init__(self, token, author=None):
+        self.github = Github(token)
+        self.token = token
+        self.user = self.github.get_user()
+        self.author = author
         self.repo = None
         self.fork = None
 
@@ -62,6 +65,8 @@ class Updater(object):
 
             try:
 
+                print(directory)
+
                 os.chdir(directory)
 
                 try:
@@ -77,10 +82,13 @@ class Updater(object):
                     self.warn("    Skipping repository")
                     return
 
+                self.commit_changes()
+
                 if '--dry' not in sys.argv:
 
                     try:
                         self.open_pull_request()
+                        print(colored('    Pull request opened', 'green'))
                     except Exception:
                         self.error("    An error occurred when opening pull request - skipping repository")
                         continue
@@ -141,9 +149,14 @@ class Updater(object):
         self.run_command('git submodule init')
         self.run_command('git submodule update')
 
+    def commit_changes(self):
+        if self.author:
+            self.run_command('git commit --author="{0}" -m "{1}"'.format(self.author, self.commit_message))
+        else:
+            self.run_command('git commit -m "{0}"'.format(self.commit_message))
+
     def open_pull_request(self):
-        self.run_command('git commit -m "{0}"'.format(self.commit_message))
-        self.run_command('git push origin {0}'.format(self.branch_name))
+        self.run_command('git push https://astrobot:{0}@github.com/{1} {2}'.format(self.token, self.fork.full_name, self.branch_name))
         self.repo.create_pull(title=self.commit_message,
                               body=self.pull_request_body,
                               base='master',
