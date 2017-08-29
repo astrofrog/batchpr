@@ -42,7 +42,7 @@ run the updater as follows:
 .. code:: python
 
     from github import Github
-    github = Github('', <password>)
+    github = Github(<username>, <password>)
 
     helper = MyUpdater(github=github)
     helper.run('username/repo')
