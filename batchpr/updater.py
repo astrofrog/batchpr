@@ -153,14 +153,14 @@ class Updater(object):
             self.run_command('git -c "user.name={0}" '
                              '    -c "user.email={1}" '
                              '    commit -m "{2}"'.format(self.author_name,
-                                                                   self.author_email,
-                                                                   self.commit_message))
+                                                          self.author_email,
+                                                          self.commit_message))
         else:
             self.run_command('git commit -m "{0}"'.format(self.commit_message))
 
     def open_pull_request(self):
         self.run_command('git push https://astrobot:{0}@github.com/{1} {2}'.format(self.token, self.fork.full_name, self.branch_name))
-        result = self.repo.create_pull(title=self.commit_message,
+        result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
                                        base='master',
                                        head='{0}:{1}'.format(self.fork.owner.login, self.branch_name))
