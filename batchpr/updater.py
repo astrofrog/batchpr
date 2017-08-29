@@ -66,8 +66,6 @@ class Updater(object):
 
             try:
 
-                print(directory)
-
                 os.chdir(directory)
 
                 try:
@@ -88,8 +86,8 @@ class Updater(object):
                 if '--dry' not in sys.argv:
 
                     try:
-                        self.open_pull_request()
-                        print(colored('    Pull request opened', 'green'))
+                        url = self.open_pull_request()
+                        print(colored('    Pull request opened: {0}'.format(url), 'green'))
                     except Exception:
                         self.error("    An error occurred when opening pull request - skipping repository")
                         continue
@@ -152,8 +150,9 @@ class Updater(object):
 
     def commit_changes(self):
         if self.author_name:
-            self.run_command('git commit -c "user.name={0}" '
-                             '-c "user.email={1}" -m "{2}"'.format(self.author_name,
+            self.run_command('git -c "user.name={0}" '
+                             '    -c "user.email={1}" '
+                             '    commit -m "{2}"'.format(self.author_name,
                                                                    self.author_email,
                                                                    self.commit_message))
         else:
@@ -161,10 +160,11 @@ class Updater(object):
 
     def open_pull_request(self):
         self.run_command('git push https://astrobot:{0}@github.com/{1} {2}'.format(self.token, self.fork.full_name, self.branch_name))
-        self.repo.create_pull(title=self.commit_message,
-                              body=self.pull_request_body,
-                              base='master',
-                              head='{0}:{1}'.format(self.fork.owner.login, self.branch_name))
+        result = self.repo.create_pull(title=self.commit_message,
+                                       body=self.pull_request_body,
+                                       base='master',
+                                       head='{0}:{1}'.format(self.fork.owner.login, self.branch_name))
+        return result.html_url
 
     def run_command(self, command):
         print("  > {0}".format(command))
