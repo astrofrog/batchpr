@@ -5,7 +5,9 @@ The aim of this package is to provide an easy way to do automated pull requests
 to a selection of repositories and make specific changes to them.
 
 To use this, you should write a Python script in which you import and subclass
-the ``Updater`` class, and define the following methods and properties::
+the ``Updater`` class, and define the following methods and properties:
+
+.. code:: python
 
     from batchpr import Updater
 
@@ -35,7 +37,9 @@ the ``Updater`` class, and define the following methods and properties::
             # The name of the branch to use
 
 Once you have defined your updater class, you can log in to GitHub and
-run the updater as follows::
+run the updater as follows:
+
+.. code:: python
 
     from github import Github
     github = Github('', <password>)
