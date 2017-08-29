@@ -2,6 +2,7 @@ import os
 import abc
 import six
 import sys
+import time
 import shutil
 import tempfile
 import subprocess
@@ -34,14 +35,17 @@ class Updater(object):
     def info(self, message):
         print(message)
 
-    def run(self, repositories):
+    def run(self, repositories, delay=0):
 
         if isinstance(repositories, six.string_types):
             repositories = [repositories]
 
         start_dir = os.path.abspath('.')
 
-        for repository in repositories:
+        for ir, repository in enumerate(repositories):
+
+            if ir > 0:
+                time.sleep(delay)
 
             print(colored('Processing repository: {0}'.format(repository), 'cyan'))
 
