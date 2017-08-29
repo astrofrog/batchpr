@@ -2,7 +2,10 @@ About
 -----
 
 The aim of this package is to provide an easy way to do automated pull requests
-to a selection of repositories and make specific changes to them.
+to a selection of repositories and make specific changes to them. This is currently functional but could be significantly improved, so contributions are welcome!
+
+Using
+-----
 
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties:
