@@ -1,4 +1,5 @@
-### About
+About
+-----
 
 The aim of this package is to provide an easy way to do automated pull requests
 to a selection of repositories and make specific changes to them.
@@ -65,7 +66,8 @@ When in the ``Updater`` class, the following methods are available:
 When running your script, you can add ``--verbose`` to see the output of the
 commands, and ``--dry`` to not open pull requests.
 
-### Example
+Full Example
+------------
 
 The following shows an example of an updater that adds a few sentences from the
 zen of Python to the README file if present:
