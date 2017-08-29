@@ -22,11 +22,12 @@ class BranchExistsException(Exception):
 @six.add_metaclass(abc.ABCMeta)
 class Updater(object):
 
-    def __init__(self, token, author=None):
+    def __init__(self, token, author_name=None, author_email=None):
         self.github = Github(token)
         self.token = token
         self.user = self.github.get_user()
-        self.author = author
+        self.author_name = author_name
+        self.author_email = author_email
         self.repo = None
         self.fork = None
 
@@ -150,8 +151,11 @@ class Updater(object):
         self.run_command('git submodule update')
 
     def commit_changes(self):
-        if self.author:
-            self.run_command('git commit --author="{0}" -m "{1}"'.format(self.author, self.commit_message))
+        if self.author_name:
+            self.run_command('git commit -c "user.name={0}" '
+                             '-c "user.email={1}" -m "{2}"'.format(self.author_name,
+                                                                   self.author_email,
+                                                                   self.commit_message))
         else:
             self.run_command('git commit -m "{0}"'.format(self.commit_message))
 

@@ -48,7 +48,11 @@ Once you have defined your updater class, you can run it with:
     helper.run('username/repo')
 
 Where GITHUB_TOKEN is a personal access token for GitHub. If you want to
-customize the author of the commit, you can also set ``author="Name <email>"``.
+customize the author of the commit, you can do this with:
+
+.. code:: python
+
+    helper.run('username/repo', author_name=..., author_email=...)
 
 The ``run`` method can take a single repository or a list of repositories.
 
