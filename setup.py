@@ -13,7 +13,7 @@ setup(
     long_description=long_description,
     packages=['batchpr'],
     package_data={'pytest_mpl': ['classic.mplstyle']},
-    install_requires=['requests'],
+    install_requires=['requests', 'pygithub', 'termcolor'],
     license='BSD',
     author='Thomas Robitaille',
     author_email='thomas.robitaille@gmail.com',
