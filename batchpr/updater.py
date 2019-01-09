@@ -163,11 +163,12 @@ class Updater(object):
             self.run_command('git commit -m "{0}"'.format(self.commit_message))
 
     def open_pull_request(self):
-        self.run_command('git push https://astrobot:{0}@github.com/{1} {2}'.format(self.token, self.fork.full_name, self.branch_name))
+        self.run_command('git push https://{0}:{1}@github.com/{2} {3}'.format(
+            self.user, self.token, self.fork.full_name, self.branch_name))
         result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
                                        base='master',
-                                       head='{0}:{1}'.format(self.fork.owner.login, self.branch_name))
+                                       head='{0}:{1}'.format(self.user, self.branch_name))
         return result.html_url
 
     def run_command(self, command):
