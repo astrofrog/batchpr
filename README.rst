@@ -7,6 +7,12 @@ to a selection of repositories and make specific changes to them. This is curren
 Using
 -----
 
+``batchpr`` requires the following packages:
+
+ * ``termcolor``
+ * ``pygithub``
+ * ``requests``
+  
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties:
 
