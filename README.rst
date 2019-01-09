@@ -1,11 +1,11 @@
 About
------
+=====
 
-The aim of this package is to provide an easy way to do automated pull requests
+The aim of this package is to provide an easy way to do automated issues or pull requests
 to a selection of repositories and make specific changes to them. This is currently functional but could be significantly improved, so contributions are welcome!
 
-Using
------
+Automated Pull Requests
+=======================
 
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties:
@@ -121,3 +121,29 @@ zen of Python to the README file if present:
         @property
         def pull_request_body(self):
             return DESCRIPTION.strip()
+
+Automated Issues
+================
+
+Opening automated issues is simpler than pull requests as you do not need
+to create forks or modify any files. You use the same GitHub token as above.
+
+Full Example
+------------
+
+The following shows an example of opening a simple issue.
+
+.. code:: python
+
+    from batchpr.updater import IssueUpdater
+
+    ISSUE_TITLE = 'Please fix this and that'
+
+    ISSUE_BODY = """
+    I found this and that with the package. Please fix them.
+
+    *This is an automated issue. If this is opened in error, please let me know!*
+    """
+
+    helper = IssueUpdater(GITHUB_TOKEN, ISSUE_TITLE, ISSUE_BODY)
+    helper.run('username/repo')
