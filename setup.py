@@ -1,17 +1,17 @@
 from setuptools import setup
 
-from ancillaries import __version__
+from batchpr import __version__
 
 with open('README.rst') as infile:
     long_description = infile.read()
 
 setup(
     version=__version__,
-    url="https://github.com/astrofrog/ancillaries",
-    name="ancillaries",
+    url="https://github.com/astrofrog/batchpr",
+    name="batchpr",
     description='Easy automated pull requests to GitHub repositories',
     long_description=long_description,
-    packages=['ancillaries'],
+    packages=['batchpr'],
     package_data={'pytest_mpl': ['classic.mplstyle']},
     install_requires=['requests'],
     license='BSD',
