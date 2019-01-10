@@ -59,7 +59,7 @@ class Updater(metaclass=abc.ABCMeta):
         """Print the given info message to terminal."""
         print(message)
 
-    def run(self, repositories, delay=0):
+    def run(self, repositories, delay=2):
         """Open pull request, one for each of the given repositories.
 
         Parameters
@@ -405,7 +405,7 @@ class IssueUpdater(Updater):
         self.issue_title = issue_title
         self.issue_body = issue_body
 
-    def run(self, repositories, delay=0):
+    def run(self, repositories, delay=2):
         """Open issue, one for each of the given repositories.
 
         Parameters
