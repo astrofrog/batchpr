@@ -2,17 +2,32 @@ About
 =====
 
 The aim of this package is to provide an easy way to do automated issues or pull requests
-to a selection of repositories and make specific changes to them. This is currently functional but could be significantly improved, so contributions are welcome!
+to a selection of repositories and make specific changes to them.
+This is currently functional but could be significantly improved, so contributions are welcome!
+
+Installation
+============
+
+To install the latest development version with ``pip``::
+
+    pip install git+https://github.com/astrofrog/batchpr.git@master
+
+To install from source::
+
+    git clone https://github.com/astrofrog/batchpr.git
+    cd batchpr
+    python setup.py install
 
 Automated Pull Requests
 =======================
 
 ``batchpr`` requires the following packages:
 
- * ``termcolor``
+ * ``git``
  * ``pygithub``
  * ``requests``
-  
+ * ``termcolor``
+
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties:
 
@@ -141,7 +156,7 @@ The following shows an example of opening a simple issue.
 
 .. code:: python
 
-    from batchpr.updater import IssueUpdater
+    from batchpr import IssueUpdater
 
     ISSUE_TITLE = 'Please fix this and that'
 
