@@ -15,6 +15,8 @@ import requests
 
 GITHUB_RAW_FILENAME = "https://raw.githubusercontent.com/{repo}/master/{filename}"
 
+__all__ = ['BranchExistsException', 'Updater', 'IssueUpdater']
+
 
 class BranchExistsException(Exception):
     pass
@@ -137,7 +139,7 @@ class Updater(object):
         # Make sure the branch doesn't already exist
         try:
             self.run_command('git checkout origin/{0}'.format(self.branch_name))
-        except:
+        except:  # noqa
             pass
         else:
             raise BranchExistsException()
@@ -198,5 +200,56 @@ class Updater(object):
         pass
 
     @abc.abstractproperty
+    def pull_request_body(self):
+        pass
+
+
+class IssueUpdater(Updater):
+    """Class to handle batch issues, not pull requests."""
+
+    def __init__(self, token, issue_title, issue_body, **kwargs):
+        super(IssueUpdater, self).__init__(token, **kwargs)
+        self.issue_title = issue_title
+        self.issue_body = issue_body
+
+    def run(self, repositories, delay=0):
+
+        if isinstance(repositories, six.string_types):
+            repositories = [repositories]
+
+        for ir, repository in enumerate(repositories):
+
+            if ir > 0:
+                time.sleep(delay)
+
+            print(colored('Processing repository: {0}'.format(repository), 'cyan'))
+
+            self.repo_name = repository
+
+            try:
+                print('  > Ensuring repository exists')
+                self.ensure_repo_set_up()
+            except Exception:
+                self.error("    An error occurred when trying to get the repository")
+                continue
+
+            try:
+                url = self.process_repo()
+                print(colored('    Issue opened: {0}'.format(url), 'green'))
+            except Exception:
+                self.error("    An error occurred when opening issue - skipping repository")
+                continue
+
+    def process_repo(self):
+        result = self.repo.create_issue(
+            title=self.issue_title, body=self.issue_body)
+        return result.html_url
+
+    def branch_name(self):
+        pass
+
+    def commit_message(self):
+        pass
+
     def pull_request_body(self):
         pass
