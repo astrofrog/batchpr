@@ -1,31 +1,52 @@
-import os
+"""Module to handle batch updaters."""
+
 import abc
-import six
-import sys
-import time
+import os
 import shutil
-import tempfile
 import subprocess
+import sys
+import tempfile
+import time
 from textwrap import indent
 
+import requests
 from github import Github
 from termcolor import colored
-import requests
-
-
-GITHUB_RAW_FILENAME = "https://raw.githubusercontent.com/{repo}/master/{filename}"
 
 __all__ = ['BranchExistsException', 'Updater', 'IssueUpdater']
 
 
 class BranchExistsException(Exception):
+    """Exception for when GitHub branch already exists."""
     pass
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Updater(object):
+class Updater(metaclass=abc.ABCMeta):
+    """Metaclass to handle batch pull requests.
+    For batch issues, use :class:`IssueUpdater`.
 
+    Parameters
+    ----------
+    token : str
+        GitHub token for associated GitHub account.
+
+    author_name : str or `None`, optional
+        Author name for GitHub account to credit for the commit,
+        if different from the account provided by ``token``.
+
+    author_email : str or `None`, optional
+        Author email that goes with ``author_name``.
+
+    Raises
+    ------
+    ValueError
+        ``author_email`` must be provided with ``author_name``.
+
+    """
     def __init__(self, token, author_name=None, author_email=None):
+        if author_name is not None and author_email is None:
+            raise ValueError('author_email must be provided with author_name')
+
         self.github = Github(token)
         self.token = token
         self.user = self.github.get_user()
@@ -35,11 +56,25 @@ class Updater(object):
         self.fork = None
 
     def info(self, message):
+        """Print the given info message to terminal."""
         print(message)
 
     def run(self, repositories, delay=0):
+        """Open pull request, one for each of the given repositories.
 
-        if isinstance(repositories, six.string_types):
+        Parameters
+        ----------
+        repositories : str or list of str
+            A single repository (format: ``'username/repon'``) or
+            a list of repositories (format: ``['user1/repo1', 'user2/repo2']``)
+            to process.
+
+        delay : int, optional
+            Delay (in seconds) between processing each repository.
+            This is ignored if only one repository is given.
+
+        """
+        if isinstance(repositories, str):
             repositories = [repositories]
 
         start_dir = os.path.abspath('.')
@@ -49,7 +84,7 @@ class Updater(object):
             if ir > 0:
                 time.sleep(delay)
 
-            print(colored('Processing repository: {0}'.format(repository), 'cyan'))
+            print(colored(f'Processing repository: {repository}', 'cyan'))
 
             self.repo_name = repository
 
@@ -69,18 +104,20 @@ class Updater(object):
 
             # Go to temporary directory
             directory = tempfile.mkdtemp()
+            print(f'  > Working in {directory}')
 
             try:
-
                 os.chdir(directory)
 
                 try:
                     self.clone_fork()
                 except BranchExistsException:
-                    self.error("    Branch {0} already exists - skipping repository".format(self.branch_name))
+                    self.error(f"    Branch {self.branch_name} already exists"
+                               " - skipping repository")
                     continue
                 except Exception:
-                    self.error("    An error occurred when cloning fork - skipping repository")
+                    self.error("    An error occurred when cloning fork - "
+                               "skipping repository")
                     continue
 
                 if not self.process_repo():
@@ -93,88 +130,171 @@ class Updater(object):
 
                     try:
                         url = self.open_pull_request()
-                        print(colored('    Pull request opened: {0}'.format(url), 'green'))
+                        print(colored(f'    Pull request opened: {url}', 'green'))
                     except Exception:
-                        self.error("    An error occurred when opening pull request - skipping repository")
+                        self.error("    An error occurred when opening "
+                                   "pull request - skipping repository")
                         continue
 
             finally:
-
                 os.chdir(start_dir)
 
     def add(self, filename):
-        self.run_command('git add {0}'.format(filename))
+        """Add the given file to ``git`` staging area."""
+        self.run_command(f'git add {filename}')
 
     def copy(self, filename1, filename2):
+        """Copy ``filename1`` to ``filename2``."""
         shutil.copy(filename1, filename2)
 
     def warn(self, message):
+        """Print the given warning message to terminal."""
         print(colored(message, 'magenta'))
 
     def error(self, message):
+        """Print the given error message to terminal."""
         print(colored(message, 'red'))
 
     def check_file_exists(self, filename):
-        r = requests.get(GITHUB_RAW_FILENAME.format(repo=self.repo_name, filename=filename))
+        """Check if a given file exists in the active repository.
+
+        Parameters
+        ----------
+        filename : str
+            Filename to check.
+
+        Returns
+        -------
+        exists : bool
+            `True` if it exists in ``self.repo_name``, else `False`.
+
+        """
+        GITHUB_RAW_FILENAME = ('https://raw.githubusercontent.com/'
+                               f'{self.repo_name}/{self.repo.default_branch}/{filename}')
+        r = requests.get(GITHUB_RAW_FILENAME)
         return r.status_code == 200
 
     def ensure_repo_set_up(self):
+        """Check if ``self.repo_name`` exists.
+        If it does, ``self.repo`` will be populated.
+        Otherwise, an exception would be raised.
+
+        """
         self.repo = self.github.get_repo(self.repo_name)
 
     def ensure_fork_set_up(self):
+        """Set up a GitHub fork for ``self.repo`` under the account of
+        ``self.user``. However, if the user owns the repo, then fork
+        creation is skipped and the repo is used directly.
+        If fork creation fails, an exception would be raised.
+
+        """
         if self.repo.owner.login != self.user.login:
             self.fork = self.user.create_fork(self.repo)
         else:
             self.fork = self.repo
 
     def clone_fork(self, dirname='.'):
+        """Clone ``self.fork`` in the given directory.
+        Then, create a new branch (``self.branch_name``) in that clone.
 
+        Parameters
+        ----------
+        dirname : str
+            Directory in which to clone.
+
+        Raises
+        ------
+        BranchExistsException
+            Branch to be created already exists.
+
+        Exception
+            ``git`` command failed.
+
+        """
         # Go to working directory
         os.chdir(dirname)
 
         # Clone the repository
-        self.run_command('git clone --depth 1 {0}'.format(self.fork.ssh_url))
+        self.run_command(f'git clone --depth 1 {self.fork.ssh_url}')
         os.chdir(self.repo.name)
 
         # Make sure the branch doesn't already exist
         try:
-            self.run_command('git checkout origin/{0}'.format(self.branch_name))
+            self.run_command(f'git checkout origin/{self.branch_name}')
         except:  # noqa
             pass
         else:
             raise BranchExistsException()
 
-        # Update to the latest upstream master
-        self.run_command('git remote add upstream {0}'.format(self.repo.clone_url))
+        # Update to the latest upstream's default branch (usually "master")
+        self.run_command(f'git remote add upstream {self.repo.clone_url}')
         self.run_command('git fetch upstream')
-        self.run_command('git checkout upstream/master')
-        self.run_command('git checkout -b {0}'.format(self.branch_name))
+        self.run_command(f'git checkout upstream/{self.repo.default_branch}')
+        self.run_command(f'git checkout -b {self.branch_name}')
 
-        # Initialize submodules
+        # Initialize submodules (this is a no-op if there is no submodule)
         self.run_command('git submodule init')
         self.run_command('git submodule update')
 
     def commit_changes(self):
-        if self.author_name:
-            self.run_command('git -c "user.name={0}" '
-                             '    -c "user.email={1}" '
-                             '    commit -m "{2}"'.format(self.author_name,
-                                                          self.author_email,
-                                                          self.commit_message))
+        """Commit repo changes in ``git`` staging area.
+        If alternate ``self.author_name`` and ``self.author_email`` are
+        given, the commit is credited to that GitHub account instead.
+        Otherwise, the GitHub account associated with the given token is used.
+        Commit message is defined in ``self.commit_message``.
+        If commit fails, an exception would be raised.
+
+        """
+        if self.author_name and self.author_email:
+            self.run_command(f'git -c "user.name={self.author_name}" '
+                             f'    -c "user.email={self.author_email}" '
+                             f'    commit -m "{self.commit_message}"')
         else:
-            self.run_command('git commit -m "{0}"'.format(self.commit_message))
+            self.run_command(f'git commit -m "{self.commit_message}"')
 
     def open_pull_request(self):
-        self.run_command('git push https://{0}:{1}@github.com/{2} {3}'.format(
-            self.user, self.token, self.fork.full_name, self.branch_name))
+        """Push the feature branch out and create a pull request on GitHub.
+
+        Returns
+        -------
+        url : str
+            URL of the pull request.
+
+        Raises
+        ------
+        Exception
+            ``git`` or GitHub command failed.
+
+        """
+        self.run_command(f'git push https://{self.user}:{self.token}@github.com/'
+                         f'{self.fork.full_name} {self.branch_name}')
         result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
-                                       base='master',
-                                       head='{0}:{1}'.format(self.user, self.branch_name))
+                                       base=self.repo.default_branch,
+                                       head=f'{self.fork.owner.login}:{self.branch_name}')
         return result.html_url
 
     def run_command(self, command):
-        print("  > {0}".format(command))
+        """Run the given shell command.
+
+        Parameters
+        ----------
+        command : str
+            Shell command to run.
+
+        Returns
+        -------
+        output : str
+            Command output.
+
+        Raises
+        ------
+        Exception
+            Command failed.
+
+        """
+        print(f"  > {command}")
         p = subprocess.Popen(command, shell=True,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
@@ -185,36 +305,122 @@ class Updater(object):
         if p.returncode == 0:
             return output
         else:
-            raise Exception("Command '{0}' failed".format(command))
+            raise Exception(f"Command '{command}' failed")
 
     @abc.abstractmethod
     def process_repo(self):
+        """This method should contain any code that you want to run inside
+        the repository to make the changes/updates. You can assume that
+        the current working directory is the repository being processed.
+        This method should call :meth:`add` to ``git add`` any files that
+        have changed, but should not commit.
+
+        Example code in this method::
+
+            import os
+
+            if os.path.exists('README.md'):
+                with open('README.md', 'a') as f:
+                    f.write(os.linesep + 'Hello World!')
+                self.add('README.md')
+                return True
+            else:
+                return False
+
+        Returns
+        -------
+        status : bool
+            This method should return `False` if it was not able to make the
+            changes, and `True` if it was.
+
+        """
         pass
 
     @abc.abstractproperty
     def branch_name(self):
+        """Name for the feature branch from which pull request will be
+        opened.
+
+        Example code in this method::
+
+            return 'readme-hello-world'
+
+        """
         pass
 
     @abc.abstractproperty
     def commit_message(self):
+        """Commit message for the change in pull request.
+
+        Example code in this method::
+
+            return "MNT: Add important text to README.rst"
+
+        """
+        pass
+
+    @abc.abstractproperty
+    def pull_request_title(self):
+        """The title of the pull request.
+
+        Example code in this method::
+
+            # Set commit message as the pull request title.
+            return self.commit_message
+
+        """
         pass
 
     @abc.abstractproperty
     def pull_request_body(self):
+        """The main body/description of the pull request.
+
+        Example code in this method::
+
+            return "Hello, this is my pull request. Please review."
+
+        """
         pass
 
 
 class IssueUpdater(Updater):
-    """Class to handle batch issues, not pull requests."""
+    """Class to handle batch issues, not pull requests.
 
+    Parameters
+    ----------
+    token : str
+        GitHub token for associated GitHub account.
+
+    issue_title : str
+        Title for the issue to be opened.
+
+    issue_body : str
+        Body of the issue to be opened.
+        Docstring-style with GitHub markdown and emoji syntax is acceptable.
+
+    """
+    # NOTE: kwargs currently not used but kept for possible future expansion.
     def __init__(self, token, issue_title, issue_body, **kwargs):
         super(IssueUpdater, self).__init__(token, **kwargs)
         self.issue_title = issue_title
         self.issue_body = issue_body
 
     def run(self, repositories, delay=0):
+        """Open issue, one for each of the given repositories.
 
-        if isinstance(repositories, six.string_types):
+        Parameters
+        ----------
+        repositories : str or list of str
+            A single repository (format: ``'username/repon'``) or
+            a list of repositories (format: ``['user1/repo1', 'user2/repo2']``)
+            to process.
+
+        delay : int, optional
+            Delay (in seconds) between processing each repository.
+            This is ignored if only one repository is given.
+
+        """
+        if isinstance(repositories, str):
             repositories = [repositories]
 
         for ir, repository in enumerate(repositories):
@@ -222,7 +428,7 @@ class IssueUpdater(Updater):
             if ir > 0:
                 time.sleep(delay)
 
-            print(colored('Processing repository: {0}'.format(repository), 'cyan'))
+            print(colored(f'Processing repository: {repository}', 'cyan'))
 
             self.repo_name = repository
 
@@ -235,20 +441,36 @@ class IssueUpdater(Updater):
 
             try:
                 url = self.process_repo()
-                print(colored('    Issue opened: {0}'.format(url), 'green'))
+                print(colored(f'    Issue opened: {url}', 'green'))
             except Exception:
-                self.error("    An error occurred when opening issue - skipping repository")
+                self.error("    An error occurred when opening issue - "
+                           "skipping repository")
                 continue
 
     def process_repo(self):
+        """Create issue in the active repository from
+        ``self.issue_title`` and ``self.issue_body``.
+
+        Returns
+        -------
+        url : str
+            URL of the issue created.
+
+        """
         result = self.repo.create_issue(
             title=self.issue_title, body=self.issue_body)
         return result.html_url
+
+    # The rest of the methods are no-op because they have to be defined
+    # according to metaclass, but they are not needed here.
 
     def branch_name(self):
         pass
 
     def commit_message(self):
+        pass
+
+    def pull_request_title(self):
         pass
 
     def pull_request_body(self):

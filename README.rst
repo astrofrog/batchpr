@@ -2,17 +2,32 @@ About
 =====
 
 The aim of this package is to provide an easy way to do automated issues or pull requests
-to a selection of repositories and make specific changes to them. This is currently functional but could be significantly improved, so contributions are welcome!
+to a selection of repositories and make specific changes to them.
+This is currently functional but could be significantly improved, so contributions are welcome!
+
+Installation
+============
+
+To install the latest development version with ``pip``::
+
+    pip install git+https://github.com/astrofrog/batchpr.git@master
+
+To install from source::
+
+    git clone https://github.com/astrofrog/batchpr.git
+    cd batchpr
+    python setup.py install
 
 Automated Pull Requests
 =======================
 
 ``batchpr`` requires the following packages:
 
- * ``termcolor``
+ * ``git``
  * ``pygithub``
  * ``requests``
-  
+ * ``termcolor``
+
 To use this, you should write a Python script in which you import and subclass
 the ``Updater`` class, and define the following methods and properties:
 
@@ -58,7 +73,8 @@ customize the author of the commit, you can do this with:
 
 .. code:: python
 
-    helper.run('username/repo', author_name=..., author_email=...)
+    helper = MyUpdater(token=GITHUB_TOKEN, author_name='Foo', author_email='foo@bar.bar')
+    helper.run('username/repo')
 
 The ``run`` method can take a single repository or a list of repositories.
 
@@ -86,6 +102,7 @@ zen of Python to the README file if present:
 
 .. code:: python
 
+    import os
     from batchpr import Updater
 
     DESCRIPTION = """
@@ -106,7 +123,7 @@ zen of Python to the README file if present:
 
             if os.path.exists('README.md'):
                 with open('README.md', 'a') as f:
-                    f.write('\n' + ADDITION)
+                    f.write(os.linesep + ADDITION)
                 self.add('README.md')
                 return True
             else:
@@ -141,7 +158,7 @@ The following shows an example of opening a simple issue.
 
 .. code:: python
 
-    from batchpr.updater import IssueUpdater
+    from batchpr import IssueUpdater
 
     ISSUE_TITLE = 'Please fix this and that'
 
