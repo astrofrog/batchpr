@@ -73,7 +73,8 @@ customize the author of the commit, you can do this with:
 
 .. code:: python
 
-    helper.run('username/repo', author_name=..., author_email=...)
+    helper = MyUpdater(token=GITHUB_TOKEN, author_name='Foo', author_email='foo@bar.bar')
+    helper.run('username/repo')
 
 The ``run`` method can take a single repository or a list of repositories.
 
@@ -101,6 +102,7 @@ zen of Python to the README file if present:
 
 .. code:: python
 
+    import os
     from batchpr import Updater
 
     DESCRIPTION = """
@@ -121,7 +123,7 @@ zen of Python to the README file if present:
 
             if os.path.exists('README.md'):
                 with open('README.md', 'a') as f:
-                    f.write('\n' + ADDITION)
+                    f.write(os.linesep + ADDITION)
                 self.add('README.md')
                 return True
             else:

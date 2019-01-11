@@ -104,6 +104,7 @@ class Updater(metaclass=abc.ABCMeta):
 
             # Go to temporary directory
             directory = tempfile.mkdtemp()
+            print(f'  > Working in {directory}')
 
             try:
                 os.chdir(directory)
@@ -271,7 +272,7 @@ class Updater(metaclass=abc.ABCMeta):
         result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
                                        base=self.repo.default_branch,
-                                       head=f'{self.user}:{self.branch_name}')
+                                       head=f'{self.fork.owner.login}:{self.branch_name}')
         return result.html_url
 
     def run_command(self, command):
