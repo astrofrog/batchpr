@@ -67,10 +67,6 @@ class Updater(metaclass=abc.ABCMeta):
         self.dry_run = dry_run
         self.verbose = verbose
 
-    def info(self, message):
-        """Print the given info message to terminal."""
-        print(message)
-
     def run(self, repositories, delay=2):
         """Open pull request, one for each of the given repositories.
 
