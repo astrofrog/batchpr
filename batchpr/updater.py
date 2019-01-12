@@ -2,6 +2,7 @@
 
 import abc
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -295,7 +296,7 @@ class Updater(metaclass=abc.ABCMeta):
 
         """
         print(f"  > {command}")
-        p = subprocess.Popen(command, shell=True,
+        p = subprocess.Popen(shlex.split(command),
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         p.wait()
