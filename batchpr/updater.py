@@ -36,13 +36,23 @@ class Updater(metaclass=abc.ABCMeta):
     author_email : str or `None`, optional
         Author email that goes with ``author_name``.
 
+    dry_run : bool
+        If `True`, the updater does not push the feature branch out nor
+        open the actual pull request but still runs all the other steps
+        (i.e., forking, branching, and committing the changes).
+
+    verbose : bool
+        Print command output to screen.
+        If `False`, it will only be printed on failure.
+
     Raises
     ------
     ValueError
         ``author_email`` must be provided with ``author_name``.
 
     """
-    def __init__(self, token, author_name=None, author_email=None):
+    def __init__(self, token, author_name=None, author_email=None,
+                 dry_run=False, verbose=False):
         if author_name is not None and author_email is None:
             raise ValueError('author_email must be provided with author_name')
 
@@ -53,12 +63,14 @@ class Updater(metaclass=abc.ABCMeta):
         self.author_email = author_email
         self.repo = None
         self.fork = None
+        self.dry_run = dry_run
+        self.verbose = verbose
 
     def info(self, message):
         """Print the given info message to terminal."""
         print(message)
 
-    def run(self, repositories, delay=2, dry_run=False):
+    def run(self, repositories, delay=2):
         """Open pull request, one for each of the given repositories.
 
         Parameters
@@ -71,11 +83,6 @@ class Updater(metaclass=abc.ABCMeta):
         delay : int, optional
             Delay (in seconds) between processing each repository.
             This is ignored if only one repository is given.
-
-        dry_run : bool
-            If `True`, this method does not push the feature branch out nor
-            open the actual pull request but still runs all the other steps
-            (i.e., forking, branching, and committing the changes).
 
         """
         if isinstance(repositories, str):
@@ -130,7 +137,7 @@ class Updater(metaclass=abc.ABCMeta):
 
                 self.commit_changes()
 
-                if not dry_run:
+                if not self.dry_run:
                     try:
                         url = self.open_pull_request()
                         print(colored(f'    Pull request opened: {url}', 'green'))
@@ -280,17 +287,13 @@ class Updater(metaclass=abc.ABCMeta):
                                        head=f'{self.fork.owner.login}:{self.branch_name}')
         return result.html_url
 
-    def run_command(self, command, verbose=False):
+    def run_command(self, command):
         """Run the given shell command.
 
         Parameters
         ----------
         command : str
             Shell command to run.
-
-        verbose : bool
-            Print command output to screen.
-            If `False`, it will only be printed on failure.
 
         Returns
         -------
@@ -309,7 +312,7 @@ class Updater(metaclass=abc.ABCMeta):
                              stderr=subprocess.STDOUT)
         p.wait()
         output = p.communicate()[0].decode('utf-8').strip()
-        if (verbose or p.returncode != 0) and output:
+        if (self.verbose or p.returncode != 0) and output:
             print(indent(output, ' ' * 4))
         if p.returncode == 0:
             return output
