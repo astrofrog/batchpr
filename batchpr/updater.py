@@ -55,10 +55,6 @@ class Updater(metaclass=abc.ABCMeta):
         self.repo = None
         self.fork = None
 
-    def info(self, message):
-        """Print the given info message to terminal."""
-        print(message)
-
     def run(self, repositories, delay=2):
         """Open pull request, one for each of the given repositories.
 
