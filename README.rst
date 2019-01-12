@@ -147,6 +147,9 @@ zen of Python to the README file if present:
         def pull_request_body(self):
             return DESCRIPTION.strip()
 
+    helper = ExampleUpdater(token=GITHUB_TOKEN)
+    helper.run('username/repo')
+
 Automated Issues
 ================
 
