@@ -133,7 +133,7 @@ class Updater(metaclass=abc.ABCMeta):
 
                 if not self.process_repo():
                     self.warn("    Skipping repository")
-                    return
+                    continue
 
                 self.commit_changes()
 
