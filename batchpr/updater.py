@@ -4,7 +4,6 @@ import abc
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from textwrap import indent
@@ -37,13 +36,23 @@ class Updater(metaclass=abc.ABCMeta):
     author_email : str or `None`, optional
         Author email that goes with ``author_name``.
 
+    dry_run : bool
+        If `True`, the updater does not push the feature branch out nor
+        open the actual pull request but still runs all the other steps
+        (i.e., forking, branching, and committing the changes).
+
+    verbose : bool
+        Print command output to screen.
+        If `False`, it will only be printed on failure.
+
     Raises
     ------
     ValueError
         ``author_email`` must be provided with ``author_name``.
 
     """
-    def __init__(self, token, author_name=None, author_email=None):
+    def __init__(self, token, author_name=None, author_email=None,
+                 dry_run=False, verbose=False):
         if author_name is not None and author_email is None:
             raise ValueError('author_email must be provided with author_name')
 
@@ -54,6 +63,8 @@ class Updater(metaclass=abc.ABCMeta):
         self.author_email = author_email
         self.repo = None
         self.fork = None
+        self.dry_run = dry_run
+        self.verbose = verbose
 
     def info(self, message):
         """Print the given info message to terminal."""
@@ -126,8 +137,7 @@ class Updater(metaclass=abc.ABCMeta):
 
                 self.commit_changes()
 
-                if '--dry' not in sys.argv:
-
+                if not self.dry_run:
                     try:
                         url = self.open_pull_request()
                         print(colored(f'    Pull request opened: {url}', 'green'))
@@ -135,6 +145,8 @@ class Updater(metaclass=abc.ABCMeta):
                         self.error("    An error occurred when opening "
                                    "pull request - skipping repository")
                         continue
+                else:
+                    print('  > Successful dry run (no pull request opened)')
 
             finally:
                 os.chdir(start_dir)
@@ -300,7 +312,7 @@ class Updater(metaclass=abc.ABCMeta):
                              stderr=subprocess.STDOUT)
         p.wait()
         output = p.communicate()[0].decode('utf-8').strip()
-        if ('--verbose' in sys.argv or p.returncode != 0) and output:
+        if (self.verbose or p.returncode != 0) and output:
             print(indent(output, ' ' * 4))
         if p.returncode == 0:
             return output
