@@ -77,11 +77,14 @@ customize the author of the commit, you can do this with:
     helper.run('username/repo')
 
 The ``run`` method can take a single repository or a list of repositories.
+If ``dry_run=True`` option is passed in, pull requests will not be opened
+but other prior steps (i.e., forking, branching, and committing the changes)
+are executed.
 
 When in the ``Updater`` class, the following methods are available:
 
-* ``self.run_command(command)``: should be used for running shell commands (e.g.
-  ``git``)
+* ``self.run_command(command)``: should be used for running shell commands
+  (e.g., ``git``); pass in ``verbose=True`` to see output of the commands.
 
 * ``self.warn(message)``: should be used for warning messages
 
@@ -90,9 +93,6 @@ When in the ``Updater`` class, the following methods are available:
 * ``self.add(filename)``: should be used to add files that have changed or are new
 
 * ``self.copy(filename1, filename2)``: can be used to copy files
-
-When running your script, you can add ``--verbose`` to see the output of the
-commands, and ``--dry`` to not open pull requests.
 
 Full Example
 ------------

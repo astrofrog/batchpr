@@ -59,7 +59,7 @@ class Updater(metaclass=abc.ABCMeta):
         """Print the given info message to terminal."""
         print(message)
 
-    def run(self, repositories, delay=2):
+    def run(self, repositories, delay=2, dry_run=False):
         """Open pull request, one for each of the given repositories.
 
         Parameters
@@ -72,6 +72,11 @@ class Updater(metaclass=abc.ABCMeta):
         delay : int, optional
             Delay (in seconds) between processing each repository.
             This is ignored if only one repository is given.
+
+        dry_run : bool
+            If `True`, this method does not push the feature branch out nor
+            open the actual pull request but still runs all the other steps
+            (i.e., forking, branching, and committing the changes).
 
         """
         if isinstance(repositories, str):
@@ -126,8 +131,7 @@ class Updater(metaclass=abc.ABCMeta):
 
                 self.commit_changes()
 
-                if '--dry' not in sys.argv:
-
+                if not dry_run:
                     try:
                         url = self.open_pull_request()
                         print(colored(f'    Pull request opened: {url}', 'green'))
@@ -135,6 +139,8 @@ class Updater(metaclass=abc.ABCMeta):
                         self.error("    An error occurred when opening "
                                    "pull request - skipping repository")
                         continue
+                else:
+                    print('  > Successful dry run (no pull request opened)')
 
             finally:
                 os.chdir(start_dir)
@@ -275,13 +281,17 @@ class Updater(metaclass=abc.ABCMeta):
                                        head=f'{self.fork.owner.login}:{self.branch_name}')
         return result.html_url
 
-    def run_command(self, command):
+    def run_command(self, command, verbose=False):
         """Run the given shell command.
 
         Parameters
         ----------
         command : str
             Shell command to run.
+
+        verbose : bool
+            Print command output to screen.
+            If `False`, it will only be printed on failure.
 
         Returns
         -------
@@ -300,7 +310,7 @@ class Updater(metaclass=abc.ABCMeta):
                              stderr=subprocess.STDOUT)
         p.wait()
         output = p.communicate()[0].decode('utf-8').strip()
-        if ('--verbose' in sys.argv or p.returncode != 0) and output:
+        if (verbose or p.returncode != 0) and output:
             print(indent(output, ' ' * 4))
         if p.returncode == 0:
             return output
