@@ -38,28 +38,29 @@ the ``Updater`` class, and define the following methods and properties:
     class MyUpdater(Updater):
 
         def process_repo(self):
-            # This method should contain any code that you want to run inside
-            # the repository to make the changes/updates. You can assume that
-            # the current working directory is the repository being processed.
-            # This method should return False if it was not able to make the
-            # changes, and True if it was. This method should call self.add
-            # to git add any files that have changed, but should not commit.
+            """This method should contain any code that you want to run inside
+            the repository to make the changes/updates. You can assume that
+            the current working directory is the repository being processed.
+            This method should return False if it was not able to make the
+            changes, and True if it was. This method should call self.add
+            to git add any files that have changed, but should not commit.
+            """
 
         @property
         def commit_message(self):
-            # The commit message to use when making the changes
+            """The commit message to use when making the changes"""
 
         @property
         def pull_request_title(self):
-            # The title of the pull request
+            """The title of the pull request"""
 
         @property
-        def pull_request_body(self)
-            # The main body/description of the pull request
+        def pull_request_body(self):
+            """The main body/description of the pull request"""
 
         @property
         def branch_name(self):
-            # The name of the branch to use
+            """The name of the branch to use"""
 
 Once you have defined your updater class, you can run it with:
 
