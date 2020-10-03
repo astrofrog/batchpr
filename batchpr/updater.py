@@ -152,6 +152,10 @@ class Updater(metaclass=abc.ABCMeta):
         """Add the given file to ``git`` staging area."""
         self.run_command(f'git add {filename}')
 
+    def remove(self, filename):
+        """Remove the given file from version control."""
+        self.run_command(f'git rm {filename}')
+
     def copy(self, filename1, filename2):
         """Copy ``filename1`` to ``filename2``."""
         shutil.copy(filename1, filename2)
@@ -237,7 +241,7 @@ class Updater(metaclass=abc.ABCMeta):
             raise BranchExistsException()
 
         # Update to the latest upstream's default branch (usually "master")
-        self.run_command(f'git remote add upstream {self.repo.clone_url}')
+        self.run_command(f'git remote add upstream {self.repo.ssh_url}')
         self.run_command('git fetch upstream')
         self.run_command(f'git checkout upstream/{self.repo.default_branch}')
         self.run_command(f'git checkout -b {self.branch_name}')
