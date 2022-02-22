@@ -229,7 +229,7 @@ class Updater(metaclass=abc.ABCMeta):
         os.chdir(dirname)
 
         # Clone the repository
-        self.run_command(f'git clone --depth 1 {self.fork.ssh_url}')
+        self.run_command(f'git clone --depth 1 {self.fork.git_url}')
         os.chdir(self.repo.name)
 
         # Make sure the branch doesn't already exist
@@ -241,7 +241,7 @@ class Updater(metaclass=abc.ABCMeta):
             raise BranchExistsException()
 
         # Update to the latest upstream's default branch (usually "master")
-        self.run_command(f'git remote add upstream {self.repo.ssh_url}')
+        self.run_command(f'git remote add upstream {self.repo.git_url}')
         self.run_command('git fetch upstream')
         self.run_command(f'git checkout upstream/{self.repo.default_branch}')
         self.run_command(f'git checkout -b {self.branch_name}')
@@ -280,7 +280,7 @@ class Updater(metaclass=abc.ABCMeta):
             ``git`` or GitHub command failed.
 
         """
-        self.run_command(f'git push https://{self.user}:{self.token}@github.com/'
+        self.run_command(f'git push https://{self.user.login}:{self.token}@github.com/'
                          f'{self.fork.full_name} {self.branch_name}')
         result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
