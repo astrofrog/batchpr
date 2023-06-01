@@ -229,7 +229,7 @@ class Updater(metaclass=abc.ABCMeta):
         os.chdir(dirname)
 
         # Clone the repository
-        self.run_command(f'git clone --depth 1 {self.fork.git_url}')
+        self.run_command(f'git clone --depth 1 {self.fork.html_url}')
         os.chdir(self.repo.name)
 
         # Make sure the branch doesn't already exist
@@ -241,7 +241,7 @@ class Updater(metaclass=abc.ABCMeta):
             raise BranchExistsException()
 
         # Update to the latest upstream's default branch (usually "master")
-        self.run_command(f'git remote add upstream {self.repo.git_url}')
+        self.run_command(f'git remote add upstream {self.repo.html_url}')
         self.run_command('git fetch upstream')
         self.run_command(f'git checkout upstream/{self.repo.default_branch}')
         self.run_command(f'git checkout -b {self.branch_name}')
