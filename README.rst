@@ -16,7 +16,7 @@ To install from source::
 
     git clone https://github.com/astrofrog/batchpr.git
     cd batchpr
-    python setup.py install
+    pip install .
 
 Automated Pull Requests
 =======================
