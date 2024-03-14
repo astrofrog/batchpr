@@ -285,7 +285,8 @@ class Updater(metaclass=abc.ABCMeta):
         result = self.repo.create_pull(title=self.pull_request_title,
                                        body=self.pull_request_body,
                                        base=self.repo.default_branch,
-                                       head=f'{self.fork.owner.login}:{self.branch_name}')
+                                       head=f'{self.fork.owner.login}:{self.branch_name}',
+                                       draft=True)
         return result.html_url
 
     def run_command(self, command):
