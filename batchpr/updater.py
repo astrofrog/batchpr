@@ -385,7 +385,8 @@ class Updater(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def branch_name(self):
         """Name for the feature branch from which pull request will be
         opened.
@@ -397,7 +398,8 @@ class Updater(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def commit_message(self):
         """Commit message for the change in pull request.
 
@@ -408,7 +410,8 @@ class Updater(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def pull_request_title(self):
         """The title of the pull request.
 
@@ -420,7 +423,8 @@ class Updater(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def pull_request_body(self):
         """The main body/description of the pull request.
 
