@@ -13,13 +13,11 @@ import requests
 from github import Github
 from termcolor import colored
 
-__all__ = ["BranchExistsException", "Updater", "IssueUpdater"]
+__all__ = ["BranchExistsException", "IssueUpdater", "Updater"]
 
 
 class BranchExistsException(Exception):
     """Exception for when GitHub branch already exists."""
-
-    pass
 
 
 class Updater(metaclass=abc.ABCMeta):
@@ -383,7 +381,6 @@ class Updater(metaclass=abc.ABCMeta):
             changes, and `True` if it was.
 
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -396,7 +393,6 @@ class Updater(metaclass=abc.ABCMeta):
             return 'readme-hello-world'
 
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -408,7 +404,6 @@ class Updater(metaclass=abc.ABCMeta):
             return "MNT: Add important text to README.rst"
 
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -421,7 +416,6 @@ class Updater(metaclass=abc.ABCMeta):
             return self.commit_message
 
         """
-        pass
 
     @property
     @abc.abstractmethod
@@ -433,7 +427,6 @@ class Updater(metaclass=abc.ABCMeta):
             return "Hello, this is my pull request. Please review."
 
         """
-        pass
 
 
 class IssueUpdater(Updater):
@@ -455,7 +448,7 @@ class IssueUpdater(Updater):
 
     # NOTE: kwargs currently not used but kept for possible future expansion.
     def __init__(self, token, issue_title, issue_body, **kwargs):
-        super(IssueUpdater, self).__init__(token, **kwargs)
+        super().__init__(token, **kwargs)
         self.issue_title = issue_title
         self.issue_body = issue_body
 
