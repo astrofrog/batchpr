@@ -30,6 +30,12 @@ test = [
 [project.urls]
 Home = "https://github.com/astrofrog/batchpr"
 
+[tool.ruff.lint]
+ignore = [
+    "BLE001",  # catching Exception is deliberate so that one failing repository does not stop the batch
+    "TRY002",  # raising a plain Exception
+]
+
 [build-system]
 requires = ["flit_core >=3.11,<5"]
 build-backend = "flit_core.buildapi"
